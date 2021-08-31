@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 from typing import Callable, Dict, List, Optional, Tuple, TypeVar
 
 import numpy as np
+import skdim
 from tqdm import tqdm
 
 from somber.components.utilities import shuffle, Scaler
@@ -110,6 +111,12 @@ class Base(object):
             self.data_dimensionality = X.shape[-1]
             self.weights = np.zeros((self.num_neurons, self.data_dimensionality))
         X = self._check_input(X)
+        N = X.shape[0]
+        n_samples = int(N*0.05)
+        lpca = skdim.id.lPCA().fit_pw(X[np.random.choice(N, n_samples)],
+                              n_neighbors=n_samples//5 or 5,
+                              n_jobs=2)
+        self.estimated_intrisic_dim = np.mean(lpca.dimension_pw_)
         if not self.trained or refit:
             X = self._init_weights(X)
         else:
